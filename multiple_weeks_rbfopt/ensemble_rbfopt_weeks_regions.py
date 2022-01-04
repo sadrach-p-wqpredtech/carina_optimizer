@@ -158,7 +158,7 @@ def model_func(X1, X2, X3, X4, X5, X6, X7, X8, X9, week, county, state, region):
     for key, value in X_new.items():
         X.append(value)
         
-    print("HERE: ", X)
+    #print("HERE: ", X)
     X = [X]
     y_pred = model.predict(X)
     y_pred = y_pred.reshape(1, -1)
