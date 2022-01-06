@@ -12,6 +12,10 @@ model = pickle.load(open(filename, 'rb'))
 
 
 def prepare_default_inputs():
+    '''
+    This function returns a dataframe that is the result of merging the SPINS and external data. 
+    This will be used to generate default inputs for the optimizer.
+    '''
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
     
@@ -58,6 +62,10 @@ default_data = prepare_default_inputs()
 
 
 def get_county_weeks_lists():
+    '''
+    This function returns lists for weeks and counties (for optimizing oveer multiple counties). 
+    It also returns county, region and state mappers.
+    '''
     max_sppd = default_data['SPPD'].max()
     week_list = list(np.arange(1,25))
     geo_df = pd.read_parquet('geo_mapping.parquet', engine='fastparquet')
@@ -73,7 +81,9 @@ max_sppd, week_list, geo_df, state_mapper, county_mapper, county_list, upc_list 
 
 
 def model_func(X1, X2, X3, X4, X5, X6, X7, X8, X9, week, county, state, region):
-    
+    '''
+    This function returns a model prediction for a singlee region, upc, and week.
+    '''
     cols = ['TIMEPERIODENDDATE', 'UPC', 'BASE_PRICE', 'DISCOUNT_PERC', 'AVGPCTACV',
            'AVGPCTACVANYDISPLAY', 'AVGPCTACVANYFEATURE',
            'AVGPCTACVFEATUREANDDISPLAY', 'AVGPCTACVTPR', 'WEEK', 'MONTH', 'YEAR',
@@ -137,12 +147,18 @@ def model_func(X1, X2, X3, X4, X5, X6, X7, X8, X9, week, county, state, region):
 REGISTERED_TEST_CLASSES = OrderedDict()
 
 def register_test_class(cls):
+    '''
+    This returns a dictionary for each test case. 
+    '''
     REGISTERED_TEST_CLASSES[cls.name] = cls
     return cls
 
 
 @register_test_class
 class ensemble:
+    '''
+    This class deefines the objective function for a single region, upc and 25 weeks. 
+    '''
     spins_bounds = [(1, 2.5), (0, 0.8), (0, 100), (0, 100), (0, 100), (0, 100), (0, 100), (-0.30, 0.30), (-0.30, 0.30), (-0.30, 0.30)]
 
     name = "Ensemble"
@@ -153,6 +169,9 @@ class ensemble:
 
     @staticmethod
     def evaluate(X):
+        '''
+        This function returns the sum of thee SPPD optimized over 25 weeks (6 months)
+        '''
         X1, X2, X3, X4, X5, X6, X7, X8, X9 = X
         results = []
         
@@ -169,7 +188,10 @@ class ensemble:
     
 def main():
 
-
+    '''
+    This function applies. the rbfopt optimizer to the objective function.
+    It prints the optimal values for each input and the optimal SPPD.
+    '''
     solver_path = os.path.join('./Bonmin-1.8.7/build/bin')
     ipopt_file = os.path.join(solver_path, 'ipopt')
     bonmin_file = os.path.join(solver_path, 'bonmin')
